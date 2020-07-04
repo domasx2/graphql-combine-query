@@ -13,7 +13,7 @@ This is a util to combine multiple graphql queries or mutations into a single on
 # Install
 
 ```sh
-yarn install graphql-combine-query
+npm install graphql-combine-query
 ```
 # Usage / examples
 

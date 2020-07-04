@@ -9,6 +9,13 @@
   ],
   "author": "Domas Lapinskas <domasx2@gmail.com>",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/domasx2/graphql-combine-query.git"
+  },
+  "bugs": {
+    "url": "https://github.com/domasx2/graphql-combine-query/issues"
+  },
   "scripts": {
     "prepublish": "tsc",
     "test": "mocha -r ts-node/register tests.ts",
