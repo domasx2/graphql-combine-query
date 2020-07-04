@@ -1,5 +1,6 @@
 graphql-combine-query
 =======================
+[![Build Status](https://travis-ci.org/domasx2/graphql-combine-query.svg?branch=master)](https://travis-ci.org/domasx2/graphql-combine-query)
 
 This is a util to combine multiple graphql queries or mutations into a single one.
 
@@ -108,7 +109,7 @@ print(document)
 
 /*
 mutation CompositeMutation($foo: foo_input!, $bar_id_0: Int!, $bar_0: bar_update_input!, $bar_id_1: Int!, $bar_1: bar_update_input!) {
-    createFoo(foo: $foo) {\n
+    createFoo(foo: $foo) {
       id
     }
     updateBar_0: updateBar(where: {id: {_eq: $bar_id_0}}, _set: $bar_0) {
