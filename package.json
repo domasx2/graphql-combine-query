@@ -1,0 +1,30 @@
+{
+  "name": "grapqhl-combine-query",
+  "version": "1.0.0",
+  "description": "combine graphql query documents",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "/dist"
+  ],
+  "author": "Domas Lapinskas <domasx2@gmail.com>",
+  "license": "MIT",
+  "scripts": {
+    "prepublish": "tsc",
+    "test": "mocha -r ts-node/register tests.ts",
+    "release": "release-it"
+  },
+  "devDependencies": {
+    "@types/chai": "^4.2.11",
+    "@types/mocha": "^7.0.2",
+    "chai": "^4.2.0",
+    "graphql": "^15.1.0",
+    "mocha": "^8.0.1",
+    "release-it": "^13.6.4",
+    "ts-node": "^8.10.2",
+    "typescript": "^3.9.5"
+  },
+  "peerDependencies": {
+    "graphql": "^15.1.0"
+  }
+}
