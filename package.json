@@ -1,8 +1,12 @@
 {
   "name": "grapqhql-combine-query",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "description": "combine graphql query documents",
-  "keywords": ["graphql", "combine", "merge"],
+  "keywords": [
+    "graphql",
+    "combine",
+    "merge"
+  ],
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
