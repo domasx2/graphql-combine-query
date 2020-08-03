@@ -24,7 +24,7 @@
   "scripts": {
     "prepublish": "tsc",
     "test": "mocha -r ts-node/register tests.ts",
-    "release": "release-it"
+    "release": "tsc & release-it"
   },
   "devDependencies": {
     "@types/chai": "^4.2.11",
