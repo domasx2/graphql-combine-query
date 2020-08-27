@@ -32,6 +32,43 @@ describe('combinedQuery', () => {
 }
 `)
   })
+  it('should combine multiple simple queries with the same fragment', () => {
+    const templateName = 'FizzTemplate'
+    const fizzTemplate = (`
+      fragment ${templateName} on Fizz {
+        fizzField
+      }
+    `)
+
+    const fooQuery = parse(`
+      query FooQuery($foo: String!) {
+        getFoo(foo: $foo) {
+          ...fizzTemplate
+        }
+      }
+      ${fizzTemplate}
+    `)
+
+    const barQuery = parse(`
+      query BarQuery($bar: String!) {
+        getBar(bar: $bar) {
+          ...fizzTemplate
+        }
+      }
+      ${fizzTemplate}
+    `)
+
+    const { document, variables } = combinedQuery('FooBarQuery')
+      .add<{ getFoo: String }, { foo: String }>(fooQuery, { foo : 'bbb'})
+      .add<{ getBar: String }, { bar: String }>(barQuery, { bar : 'ccc'})
+
+    expect(variables).deep.equal({
+      foo: 'bbb',
+      bar: 'ccc'
+    })
+    const fragmentDefinitions = document.definitions.filter((d: any) => d.name.value === templateName)
+    expect(fragmentDefinitions.length).equal(1)
+  })
 
   it('should cominbe multiple mutations', () => {
     const fooMutation = parse(`
@@ -130,7 +167,7 @@ describe('combinedQuery', () => {
 
     const { document, variables } = combinedQuery('CombinedMutation')
       .add(fooMutation, { foo: 'one'})
-      .addN(barMutation, [ 
+      .addN(barMutation, [
         { bar: 'two', badar: 1},
         { bar: 'three', badar: 2}
       ])
@@ -160,7 +197,7 @@ describe('combinedQuery', () => {
   doBaz(baz: $baz)
 }
 `)
-  
+
   })
 
   it('validation - different operation types', () => {
