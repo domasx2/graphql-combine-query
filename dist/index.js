@@ -91,21 +91,34 @@ var CombinedQueryBuilderImpl = /** @class */ (function () {
             }
             return (variables || _this.variables);
         })();
+        var definitions = [{
+                kind: 'OperationDefinition',
+                directives: opDefs.flatMap(function (def) { return def.directives || []; }),
+                name: { kind: 'Name', value: this.operationName },
+                operation: opDefs[0].operation,
+                selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: opDefs.flatMap(function (def) { return def.selectionSet.selections; })
+                },
+                variableDefinitions: opDefs.flatMap(function (def) { return def.variableDefinitions || []; })
+            }];
+        var encounteredFragmentList = new Set();
+        for (var _i = 0, _a = document.definitions; _i < _a.length; _i++) {
+            var definition = _a[_i];
+            if (definition.kind === 'OperationDefinition') {
+                continue;
+            }
+            if (definition.kind === 'FragmentDefinition') {
+                if (encounteredFragmentList.has(definition.name.value)) {
+                    continue;
+                }
+                encounteredFragmentList.add(definition.name.value);
+            }
+            definitions = __spreadArrays([definition], definitions);
+        }
         var newDoc = {
             kind: 'Document',
-            definitions: __spreadArrays(this.document.definitions.concat(document.definitions).filter(function (def) { return def.kind !== 'OperationDefinition'; }), [
-                {
-                    kind: 'OperationDefinition',
-                    directives: opDefs.flatMap(function (def) { return def.directives || []; }),
-                    name: { kind: 'Name', value: this.operationName },
-                    operation: opDefs[0].operation,
-                    selectionSet: {
-                        kind: 'SelectionSet',
-                        selections: opDefs.flatMap(function (def) { return def.selectionSet.selections; })
-                    },
-                    variableDefinitions: opDefs.flatMap(function (def) { return def.variableDefinitions || []; })
-                }
-            ])
+            definitions: definitions
         };
         return new CombinedQueryBuilderImpl(this.operationName, newDoc, newVars);
     };
