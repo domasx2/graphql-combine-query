@@ -24,7 +24,7 @@ export interface CombinedQueryBuilder<TData = any, TVariables extends OperationV
 class CombinedQueryError extends Error {}
 
 class CombinedQueryBuilderImpl<TData = any, TVariables = OperationVariables> implements CombinedQueryBuilder<TData, TVariables> {
-  
+
   document: DocumentNode
   variables?: TVariables
 
@@ -39,7 +39,7 @@ class CombinedQueryBuilderImpl<TData = any, TVariables = OperationVariables> imp
     if (!opDefs.length) {
       throw new CombinedQueryError('Expected at least one OperationDefinition, but found none.')
     }
-    
+
     // do some basic validation
     opDefs.forEach(def => {
 
@@ -81,22 +81,34 @@ class CombinedQueryBuilderImpl<TData = any, TVariables = OperationVariables> imp
       return (variables || this.variables) as TVariables & TVariablesAdd
     })()
 
+    let definitions: DefinitionNode[] = [{
+      kind: 'OperationDefinition',
+      directives: opDefs.flatMap(def => def.directives || []),
+      name: { kind: 'Name', value: this.operationName },
+      operation: opDefs[0].operation,
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: opDefs.flatMap(def => def.selectionSet.selections)
+      },
+      variableDefinitions: opDefs.flatMap(def => def.variableDefinitions || [])
+    }]
+    const encounteredFragmentList = new Set<string>()
+    for (const definition of document.definitions) {
+      if (definition.kind === 'OperationDefinition') {
+        continue
+      }
+      if (definition.kind === 'FragmentDefinition') {
+        if (encounteredFragmentList.has(definition.name.value)) {
+          continue
+        }
+        encounteredFragmentList.add(definition.name.value)
+      }
+      definitions = [definition, ...definitions]
+    }
+
     const newDoc: DocumentNode = {
       kind: 'Document',
-      definitions: [
-        ...this.document.definitions.concat(document.definitions).filter(def => def.kind !== 'OperationDefinition'),
-        {
-          kind: 'OperationDefinition',
-          directives: opDefs.flatMap(def => def.directives || []),
-          name: { kind: 'Name', value: this.operationName },
-          operation: opDefs[0].operation,
-          selectionSet: {
-            kind: 'SelectionSet',
-            selections: opDefs.flatMap(def => def.selectionSet.selections)
-          },
-          variableDefinitions: opDefs.flatMap(def => def.variableDefinitions || [])
-        }
-      ]
+      definitions
     }
 
     return new CombinedQueryBuilderImpl<TData & TDataAdd, TVariables & TVariablesAdd>(this.operationName, newDoc, newVars)
