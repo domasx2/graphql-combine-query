@@ -24,7 +24,7 @@ create query builder with `combineQuery(newQueryName)` and use `.add(document, v
 argument list & top level selections are concatenated
 
 ```javascript
-import comineQuery from 'graphql-combine-query'
+import combineQuery from 'graphql-combine-query'
 
 import gql from 'graphql-tag'
 
@@ -65,7 +65,7 @@ Arguments & top level selections will be renamed/aliased with index appended.
 Let's say we want to create foo and update several bars by id:
 
 ```javascript
-import comineQuery from 'graphql-combine-query'
+import combineQuery from 'graphql-combine-query'
 
 import gql from 'graphql-tag'
 
