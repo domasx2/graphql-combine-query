@@ -103,8 +103,9 @@ var CombinedQueryBuilderImpl = /** @class */ (function () {
                 variableDefinitions: opDefs.flatMap(function (def) { return def.variableDefinitions || []; })
             }];
         var encounteredFragmentList = new Set();
-        for (var _i = 0, _a = document.definitions; _i < _a.length; _i++) {
-            var definition = _a[_i];
+        var combinedDocumentDefinitions = this.document.definitions.concat(document.definitions);
+        for (var _i = 0, combinedDocumentDefinitions_1 = combinedDocumentDefinitions; _i < combinedDocumentDefinitions_1.length; _i++) {
+            var definition = combinedDocumentDefinitions_1[_i];
             if (definition.kind === 'OperationDefinition') {
                 continue;
             }
