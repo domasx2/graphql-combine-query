@@ -93,7 +93,8 @@ class CombinedQueryBuilderImpl<TData = any, TVariables = OperationVariables> imp
       variableDefinitions: opDefs.flatMap(def => def.variableDefinitions || [])
     }]
     const encounteredFragmentList = new Set<string>()
-    for (const definition of document.definitions) {
+    const combinedDocumentDefinitions = this.document.definitions.concat(document.definitions)
+    for (const definition of combinedDocumentDefinitions) {
       if (definition.kind === 'OperationDefinition') {
         continue
       }

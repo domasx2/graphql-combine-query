@@ -69,6 +69,61 @@ describe('combinedQuery', () => {
     const fragmentDefinitions = document.definitions.filter((d: any) => d.name.value === templateName)
     expect(fragmentDefinitions.length).equal(1)
   })
+  it('should combine multiple simple queries with multiple fragments', () => {
+    const templateName = 'FizzTemplate'
+    const fizzTemplate = (`
+      fragment ${templateName} on Fizz {
+        fizzField
+      }
+    `)
+
+    const bizzTemplate = (`
+      fragment bizzTemplate on Bizz {
+        bizzField
+      }
+    `)
+
+    const fooQuery = parse(`
+      query FooQuery($foo: String!) {
+        getFoo(foo: $foo) {
+          ...fizzTemplate
+        }
+      }
+      ${fizzTemplate}
+    `)
+
+    const barQuery = parse(`
+      query BarQuery($bar: String!) {
+        getBar(bar: $bar) {
+          ...fizzTemplate
+        }
+      }
+      ${fizzTemplate}
+    `)
+
+    const bizzQuery = parse(`
+      query BizzQuery($bizz: String!) {
+        getBizz(bizz: $bizz) {
+          ...bizzTemplate
+        }
+      }
+      ${bizzTemplate}
+    `)
+
+    const { document, variables } = combinedQuery('FooBarQuery')
+      .add<{ getFoo: String }, { foo: String }>(fooQuery, { foo : 'bbb'})
+      .add<{ getBar: String }, { bar: String }>(barQuery, { bar : 'ccc'})
+      .add<{ getBar: String }, { bizz: String }>(bizzQuery, { bizz : 'ddd'})
+
+
+    expect(variables).deep.equal({
+      foo: 'bbb',
+      bar: 'ccc',
+      bizz : 'ddd'
+    })
+    const fragmentDefinitions = document.definitions.filter((d: any) => d.kind === 'FragmentDefinition')
+    expect(fragmentDefinitions.length).equal(2)
+  })
 
   it('should cominbe multiple mutations', () => {
     const fooMutation = parse(`
