@@ -133,8 +133,8 @@ export default function combinedQuery(operationName: string): NewCombinedQueryBu
     add<TData = any, TVariables extends OperationVariables={}>(document: DocumentNode, variables?: TVariables ) {
       return new CombinedQueryBuilderImpl<TData, TVariables>(this.operationName, document, variables)
     },
-    addN<TVariables = OperationVariables>(document: DocumentNode, variables: TVariables[]): CombinedQueryBuilder<{}, {}> {
-      return new CombinedQueryBuilderImpl<{}, {}>(this.operationName,  emptyDoc).addN<TVariables>(document, variables)
+    addN<TVariables = OperationVariables>(document: DocumentNode, variables: TVariables[], variableRenameFn?: RenameFnWithIndex, fieldRenameFn?: RenameFnWithIndex): CombinedQueryBuilder<{}, {}> {
+      return new CombinedQueryBuilderImpl<{}, {}>(this.operationName,  emptyDoc).addN<TVariables>(document, variables, variableRenameFn, fieldRenameFn)
     }
   }
 }
