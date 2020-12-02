@@ -314,4 +314,64 @@ describe('combinedQuery', () => {
         .add(fooQuery2, { foo: 'foo2'})
     }).to.throw('duplicate variable definition foo for oprations FooQuery and FooQuery2')
   })
+
+  it('renaming works correctly if addN is used as the first operation', () => {
+    const fooMutation = parse(`
+      mutation FooQuery($foo: String!) {
+        doFoo(foo: $foo)
+      }
+    `)
+
+    const renamingFunction = (name: string, index: number) => {
+      return `${name}___${index}`
+    }
+
+    let { document, variables } = combinedQuery('FooMutationMultiple')
+      .addN<{ foo: String }>(fooMutation, [{foo: 'foo_0'}, {foo: "foo_1"}], undefined, renamingFunction)
+
+    let query =
+      `mutation FooMutationMultiple($foo_0: String!, $foo_1: String!) {
+          doFoo___0: doFoo(foo: $foo_0)
+          doFoo___1: doFoo(foo: $foo_1)
+      }`
+
+    query = print(parse(query))
+    expect(print(document)).to.equal(query)
+    expect(variables).to.include({
+      foo_0: "foo_0",
+      foo_1: "foo_1"
+    })
+
+    ;({ document, variables } = combinedQuery('FooMutationMultiple')
+      .addN<{ foo: String }>(fooMutation, [{foo: 'foo_0'}, {foo: "foo_1"}], renamingFunction, undefined))
+
+    query =
+      `mutation FooMutationMultiple($foo___0: String!, $foo___1: String!) {
+          doFoo_0: doFoo(foo: $foo___0)
+          doFoo_1: doFoo(foo: $foo___1)
+      }`
+
+    query = print(parse(query))
+    expect(print(document)).to.equal(query)
+    expect(variables).to.include({
+        foo___0: "foo_0",
+        foo___1: "foo_1"
+    })
+
+    ;({ document, variables } = combinedQuery('FooMutationMultiple')
+      .addN<{ foo: String }>(fooMutation, [{foo: 'foo_0'}, {foo: "foo_1"}], renamingFunction, renamingFunction))
+
+    query =
+      `mutation FooMutationMultiple($foo___0: String!, $foo___1: String!) {
+          doFoo___0: doFoo(foo: $foo___0)
+          doFoo___1: doFoo(foo: $foo___1)
+      }`
+
+    query = print(parse(query))
+    expect(print(document)).to.equal(query)
+    expect(variables).to.include({
+      foo___0: "foo_0",
+      foo___1: "foo_1"
+    })
+  })
 })
