@@ -143,8 +143,8 @@ function combinedQuery(operationName) {
         add: function (document, variables) {
             return new CombinedQueryBuilderImpl(this.operationName, document, variables);
         },
-        addN: function (document, variables) {
-            return new CombinedQueryBuilderImpl(this.operationName, emptyDoc).addN(document, variables);
+        addN: function (document, variables, variableRenameFn, fieldRenameFn) {
+            return new CombinedQueryBuilderImpl(this.operationName, emptyDoc).addN(document, variables, variableRenameFn, fieldRenameFn);
         }
     };
 }
