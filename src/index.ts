@@ -48,15 +48,15 @@ class CombinedQueryBuilderImpl<TData = any, TVariables = OperationVariables> imp
       // all op defs must be of the same type
       otherOpDefs.forEach(_def => {
         if (_def.operation !== def.operation) {
-          throw new CombinedQueryError(`expected all operations to be of the smae type, but ${_def.name?.value} is ${_def.operation} and ${def.name?.value} is ${def.operation}`)
+          throw new CombinedQueryError(`expected all operations to be of the same type, but ${_def.name?.value} is ${_def.operation} and ${def.name?.value} is ${def.operation}`)
         }
       })
 
-      // all top level fields mut be unique. doesn't drill down framgents tho. maybe someday
+      // all top level fields mut be unique. doesn't drill down fragments tho. maybe someday
       def.selectionSet.selections?.filter((s): s is FieldNode => s.kind === 'Field').forEach(sel => {
         otherOpDefs.forEach(_def => _def.selectionSet.selections?.filter((s): s is FieldNode => s.kind === 'Field').forEach(_sel => {
           if ((sel.alias?.value || sel.name.value) === (_sel.alias?.value || _sel.name.value)) {
-            throw new CombinedQueryError(`duplicate field definition ${_sel.name.value} for oprations ${def.name?.value} and ${_def.name?.value}`)
+            throw new CombinedQueryError(`duplicate field definition ${_sel.name.value} for operations ${def.name?.value} and ${_def.name?.value}`)
           }
         }))
       })
@@ -65,7 +65,7 @@ class CombinedQueryBuilderImpl<TData = any, TVariables = OperationVariables> imp
       def.variableDefinitions?.forEach(variable => {
         otherOpDefs.forEach(_def => _def.variableDefinitions?.forEach(_variable => {
           if (variable.variable.name.value === _variable.variable.name.value) {
-            throw new CombinedQueryError(`duplicate variable definition ${_variable.variable.name.value} for oprations ${def.name?.value} and ${_def.name?.value}`)
+            throw new CombinedQueryError(`duplicate variable definition ${_variable.variable.name.value} for operations ${def.name?.value} and ${_def.name?.value}`)
           }
         }))
       })
