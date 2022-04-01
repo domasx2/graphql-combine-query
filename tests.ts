@@ -272,7 +272,7 @@ describe('combinedQuery', () => {
       combinedQuery('test')
         .add(fooQuery, { foo: 'foo' })
         .add(fooMutation, { fooo: 'fooo'})
-    }).to.throw('expected all operations to be of the smae type, but FooMutation is mutation and FooQuery is query')
+    }).to.throw('expected all operations to be of the same type, but FooMutation is mutation and FooQuery is query')
   })
 
   it('validation - top level fields must be unique', () => {
@@ -292,7 +292,7 @@ describe('combinedQuery', () => {
       combinedQuery('test')
         .add(fooQuery, { foo: 'foo' })
         .add(fooQuery2)
-    }).to.throw('duplicate field definition foo for oprations FooQuery and FooQuery2')
+    }).to.throw('duplicate field definition foo for operations FooQuery and FooQuery2')
   })
 
   it('validation - variable names must be unique', () => {
@@ -312,7 +312,7 @@ describe('combinedQuery', () => {
       combinedQuery('test')
         .add(fooQuery, { foo: 'foo' })
         .add(fooQuery2, { foo: 'foo2'})
-    }).to.throw('duplicate variable definition foo for oprations FooQuery and FooQuery2')
+    }).to.throw('duplicate variable definition foo for operations FooQuery and FooQuery2')
   })
 
   it('renaming works correctly if addN is used as the first operation', () => {
