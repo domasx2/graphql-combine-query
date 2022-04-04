@@ -37,6 +37,6 @@
     "typescript": "^3.9.5"
   },
   "peerDependencies": {
-    "graphql": "^15.1.0"
+    "graphql": "^15.1.0 || ^16.0.0"
   }
 }

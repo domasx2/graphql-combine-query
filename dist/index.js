@@ -63,15 +63,15 @@ var CombinedQueryBuilderImpl = /** @class */ (function () {
             otherOpDefs.forEach(function (_def) {
                 var _a, _b;
                 if (_def.operation !== def.operation) {
-                    throw new CombinedQueryError("expected all operations to be of the smae type, but " + ((_a = _def.name) === null || _a === void 0 ? void 0 : _a.value) + " is " + _def.operation + " and " + ((_b = def.name) === null || _b === void 0 ? void 0 : _b.value) + " is " + def.operation);
+                    throw new CombinedQueryError("expected all operations to be of the same type, but " + ((_a = _def.name) === null || _a === void 0 ? void 0 : _a.value) + " is " + _def.operation + " and " + ((_b = def.name) === null || _b === void 0 ? void 0 : _b.value) + " is " + def.operation);
                 }
             });
-            // all top level fields mut be unique. doesn't drill down framgents tho. maybe someday
+            // all top level fields mut be unique. doesn't drill down fragments tho. maybe someday
             (_a = def.selectionSet.selections) === null || _a === void 0 ? void 0 : _a.filter(function (s) { return s.kind === 'Field'; }).forEach(function (sel) {
                 otherOpDefs.forEach(function (_def) { var _a; return (_a = _def.selectionSet.selections) === null || _a === void 0 ? void 0 : _a.filter(function (s) { return s.kind === 'Field'; }).forEach(function (_sel) {
                     var _a, _b, _c, _d;
                     if ((((_a = sel.alias) === null || _a === void 0 ? void 0 : _a.value) || sel.name.value) === (((_b = _sel.alias) === null || _b === void 0 ? void 0 : _b.value) || _sel.name.value)) {
-                        throw new CombinedQueryError("duplicate field definition " + _sel.name.value + " for oprations " + ((_c = def.name) === null || _c === void 0 ? void 0 : _c.value) + " and " + ((_d = _def.name) === null || _d === void 0 ? void 0 : _d.value));
+                        throw new CombinedQueryError("duplicate field definition " + _sel.name.value + " for operations " + ((_c = def.name) === null || _c === void 0 ? void 0 : _c.value) + " and " + ((_d = _def.name) === null || _d === void 0 ? void 0 : _d.value));
                     }
                 }); });
             });
@@ -80,7 +80,7 @@ var CombinedQueryBuilderImpl = /** @class */ (function () {
                 otherOpDefs.forEach(function (_def) { var _a; return (_a = _def.variableDefinitions) === null || _a === void 0 ? void 0 : _a.forEach(function (_variable) {
                     var _a, _b;
                     if (variable.variable.name.value === _variable.variable.name.value) {
-                        throw new CombinedQueryError("duplicate variable definition " + _variable.variable.name.value + " for oprations " + ((_a = def.name) === null || _a === void 0 ? void 0 : _a.value) + " and " + ((_b = _def.name) === null || _b === void 0 ? void 0 : _b.value));
+                        throw new CombinedQueryError("duplicate variable definition " + _variable.variable.name.value + " for operations " + ((_a = def.name) === null || _a === void 0 ? void 0 : _a.value) + " and " + ((_b = _def.name) === null || _b === void 0 ? void 0 : _b.value));
                     }
                 }); });
             });
