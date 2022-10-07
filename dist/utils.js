@@ -10,16 +10,19 @@ var __assign = (this && this.__assign) || function () {
     };
     return __assign.apply(this, arguments);
 };
-var __spreadArrays = (this && this.__spreadArrays) || function () {
-    for (var s = 0, i = 0, il = arguments.length; i < il; i++) s += arguments[i].length;
-    for (var r = Array(s), k = 0, i = 0; i < il; i++)
-        for (var a = arguments[i], j = 0, jl = a.length; j < jl; j++, k++)
-            r[k] = a[j];
-    return r;
+var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
+    if (pack || arguments.length === 2) for (var i = 0, l = from.length, ar; i < l; i++) {
+        if (ar || !(i in from)) {
+            if (!ar) ar = Array.prototype.slice.call(from, 0, i);
+            ar[i] = from[i];
+        }
+    }
+    return to.concat(ar || Array.prototype.slice.call(from));
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.renameVariables = exports.renameVariablesAndTopLevelFields = exports.renameVariablesAndTopLevelFieldsOnOpDef = exports.renameSelectionSetArguments = exports.renameVariableDefinition = exports.renameDirectiveArguments = exports.renameArgument = exports.renameValue = exports.defaultRenameFn = void 0;
-exports.defaultRenameFn = function (name, index) { return name + "_" + index; };
+var defaultRenameFn = function (name, index) { return "".concat(name, "_").concat(index); };
+exports.defaultRenameFn = defaultRenameFn;
 function renameValue(node, renameFn) {
     if (node.kind === 'Variable') {
         return __assign(__assign({}, node), { name: __assign(__assign({}, node.name), { value: renameFn(node.name.value) }) });
@@ -75,9 +78,9 @@ function renameVariablesAndTopLevelFieldsOnOpDef(op, variableRenameFn, fieldRena
 }
 exports.renameVariablesAndTopLevelFieldsOnOpDef = renameVariablesAndTopLevelFieldsOnOpDef;
 function renameVariablesAndTopLevelFields(doc, variableRenameFn, fieldRenameFn) {
-    return __assign(__assign({}, doc), { definitions: __spreadArrays(doc.definitions.filter(function (def) { return def.kind !== 'OperationDefinition'; }), doc.definitions.filter(function (def) { return def.kind === 'OperationDefinition'; }).map(function (opDef) {
+    return __assign(__assign({}, doc), { definitions: __spreadArray(__spreadArray([], doc.definitions.filter(function (def) { return def.kind !== 'OperationDefinition'; }), true), doc.definitions.filter(function (def) { return def.kind === 'OperationDefinition'; }).map(function (opDef) {
             return renameVariablesAndTopLevelFieldsOnOpDef(opDef, variableRenameFn, fieldRenameFn);
-        })) });
+        }), true) });
 }
 exports.renameVariablesAndTopLevelFields = renameVariablesAndTopLevelFields;
 function renameVariables(variables, renameFn) {

@@ -18,17 +18,17 @@ describe('combinedQuery', () => {
     `)
 
     const { document, variables } = combinedQuery('FooBarQuery')
-      .add<{ getFoo: String }, { foo: String }>(fooQuery, { foo : 'bbb'})
-      .add<{ getBar: String }, { bar: String }>(barQuery, { bar : 'ccc'})
+      .add<{ getFoo: String }, { foo: String }>('foo', fooQuery, { foo : 'bbb'})
+      .add<{ getBar: String }, { bar: String }>('bar', barQuery, { bar : 'ccc'})
 
     expect(variables).deep.equal({
-      foo: 'bbb',
-      bar: 'ccc'
+      foo_foo: 'bbb',
+      bar_bar: 'ccc'
     })
 
-    expect(print(document)).equal(`query FooBarQuery($foo: String!, $bar: String!) {
-  getFoo(foo: $foo)
-  getBar(bar: $bar)
+    expect(print(document)).equal(`query FooBarQuery($foo_foo: String!, $bar_bar: String!) {
+  getFoo: getFoo(foo: $foo_foo)
+  getBar: getBar(bar: $bar_bar)
 }
 `)
   })
@@ -59,12 +59,12 @@ describe('combinedQuery', () => {
     `)
 
     const { document, variables } = combinedQuery('FooBarQuery')
-      .add<{ getFoo: String }, { foo: String }>(fooQuery, { foo : 'bbb'})
-      .add<{ getBar: String }, { bar: String }>(barQuery, { bar : 'ccc'})
+      .add<{ getFoo: String }, { foo: String }>('foo', fooQuery, { foo : 'bbb'})
+      .add<{ getBar: String }, { bar: String }>('bar', barQuery, { bar : 'ccc'})
 
     expect(variables).deep.equal({
-      foo: 'bbb',
-      bar: 'ccc'
+      foo_foo: 'bbb',
+      bar_bar: 'ccc'
     })
     const fragmentDefinitions = document.definitions.filter((d: any) => d.name.value === templateName)
     expect(fragmentDefinitions.length).equal(1)
@@ -111,15 +111,15 @@ describe('combinedQuery', () => {
     `)
 
     const { document, variables } = combinedQuery('FooBarQuery')
-      .add<{ getFoo: String }, { foo: String }>(fooQuery, { foo : 'bbb'})
-      .add<{ getBar: String }, { bar: String }>(barQuery, { bar : 'ccc'})
-      .add<{ getBar: String }, { bizz: String }>(bizzQuery, { bizz : 'ddd'})
+      .add<{ getFoo: String }, { foo: String }>('foo', fooQuery, { foo : 'bbb'})
+      .add<{ getBar: String }, { bar: String }>('bar', barQuery, { bar : 'ccc'})
+      .add<{ getBar: String }, { bizz: String }>('biz', bizzQuery, { bizz : 'ddd'})
 
 
     expect(variables).deep.equal({
-      foo: 'bbb',
-      bar: 'ccc',
-      bizz : 'ddd'
+      foo_foo: 'bbb',
+      bar_bar: 'ccc',
+      biz_bizz : 'ddd'
     })
     const fragmentDefinitions = document.definitions.filter((d: any) => d.kind === 'FragmentDefinition')
     expect(fragmentDefinitions.length).equal(2)
@@ -139,17 +139,17 @@ describe('combinedQuery', () => {
     `)
 
     const { document, variables } = combinedQuery('FooBarMutation')
-      .add<{ doFoo: String }, { foo: String }>(fooMutation, { foo : 'bbb'})
-      .add<{ doBar: String }, { bar: String }>(barMutation, { bar : 'ccc'})
+      .add<{ doFoo: String }, { foo: String }>('fooMut', fooMutation, { foo : 'bbb'})
+      .add<{ doBar: String }, { bar: String }>('barMut', barMutation, { bar : 'ccc'})
 
     expect(variables).deep.equal({
-      foo: 'bbb',
-      bar: 'ccc'
+      fooMut_foo: 'bbb',
+      barMut_bar: 'ccc'
     })
 
-    expect(print(document)).equal(`mutation FooBarMutation($foo: String!, $bar: String!) {
-  doFoo(foo: $foo)
-  doBar(bar: $bar)
+    expect(print(document)).equal(`mutation FooBarMutation($fooMut_foo: String!, $barMut_bar: String!) {
+  doFoo: doFoo(foo: $fooMut_foo)
+  doBar: doBar(bar: $barMut_bar)
 }
 `)
   })
@@ -165,31 +165,31 @@ describe('combinedQuery', () => {
       }
     `)
 
-    const { document, variables } = combinedQuery('FooMutation').addN(fooMutation, [
+    const { document, variables } = combinedQuery('FooMutation').addN('fooMutN', fooMutation, [
       { foo: 'one' },
       { foo: 'two' },
       { foo: 'three'}
     ])
 
     expect(variables).deep.equal({
-      foo_0: 'one',
-      foo_1: 'two',
-      foo_2: 'three'
+      fooMutN_foo_0: 'one',
+      fooMutN_foo_1: 'two',
+      fooMutN_foo_2: 'three'
     })
 
-    expect(print(document)).equal(`mutation FooMutation($foo_0: String!, $foo_1: String!, $foo_2: String!) {
-  doFoo_0: doFoo(foo: $foo_0) {
-    doBar(where: {foo: $foo_0, bar: [$foo_0]}) {
+    expect(print(document)).equal(`mutation FooMutation($fooMutN_foo_0: String!, $fooMutN_foo_1: String!, $fooMutN_foo_2: String!) {
+  doFoo_0: doFoo(foo: $fooMutN_foo_0) {
+    doBar(where: {foo: $fooMutN_foo_0, bar: [$fooMutN_foo_0]}) {
       zab
     }
   }
-  doFoo_1: doFoo(foo: $foo_1) {
-    doBar(where: {foo: $foo_1, bar: [$foo_1]}) {
+  doFoo_1: doFoo(foo: $fooMutN_foo_1) {
+    doBar(where: {foo: $fooMutN_foo_1, bar: [$fooMutN_foo_1]}) {
       zab
     }
   }
-  doFoo_2: doFoo(foo: $foo_2) {
-    doBar(where: {foo: $foo_2, bar: [$foo_2]}) {
+  doFoo_2: doFoo(foo: $fooMutN_foo_2) {
+    doBar(where: {foo: $fooMutN_foo_2, bar: [$fooMutN_foo_2]}) {
       zab
     }
   }
@@ -221,35 +221,35 @@ describe('combinedQuery', () => {
     `)
 
     const { document, variables } = combinedQuery('CombinedMutation')
-      .add(fooMutation, { foo: 'one'})
-      .addN(barMutation, [
+      .add('fooMut', fooMutation, { foo: 'one'})
+      .addN('barMutN', barMutation, [
         { bar: 'two', badar: 1},
         { bar: 'three', badar: 2}
       ])
-      .add(bazMutation, { baz: 'four'})
+      .add('baz', bazMutation, { baz: 'four'})
 
       expect(variables).deep.equal({
-        foo: 'one',
-        bar_0: 'two',
-        badar_0: 1,
-        bar_1: 'three',
-        badar_1: 2,
-        baz: 'four'
+        fooMut_foo: 'one',
+        barMutN_bar_0: 'two',
+        barMutN_badar_0: 1,
+        barMutN_bar_1: 'three',
+        barMutN_badar_1: 2,
+        baz_baz: 'four'
       })
 
-     expect(print(document)).equal(`mutation CombinedMutation($foo: String!, $bar_0: String!, $badar_0: Int!, $bar_1: String!, $badar_1: Int!, $baz: String!) {
-  doFoo(foo: $foo)
-  doBar_0: doBar(bar: $bar_0) {
-    za(ba: {b: $badar_0}) {
+     expect(print(document)).equal(`mutation CombinedMutation($fooMut_foo: String!, $barMutN_bar_0: String!, $barMutN_badar_0: Int!, $barMutN_bar_1: String!, $barMutN_badar_1: Int!, $baz_baz: String!) {
+  doFoo: doFoo(foo: $fooMut_foo)
+  doBar_0: doBar(bar: $barMutN_bar_0) {
+    za(ba: {b: $barMutN_badar_0}) {
       x
     }
   }
-  doBar_1: doBar(bar: $bar_1) {
-    za(ba: {b: $badar_1}) {
+  doBar_1: doBar(bar: $barMutN_bar_1) {
+    za(ba: {b: $barMutN_badar_1}) {
       x
     }
   }
-  doBaz(baz: $baz)
+  doBaz: doBaz(baz: $baz_baz)
 }
 `)
 
@@ -270,8 +270,8 @@ describe('combinedQuery', () => {
 
     expect(() => {
       combinedQuery('test')
-        .add(fooQuery, { foo: 'foo' })
-        .add(fooMutation, { fooo: 'fooo'})
+        .add('fooQ', fooQuery, { foo: 'foo' })
+        .add('fooMut', fooMutation, { fooo: 'fooo'})
     }).to.throw('expected all operations to be of the same type, but FooMutation is mutation and FooQuery is query')
   })
 
@@ -290,12 +290,12 @@ describe('combinedQuery', () => {
 
     expect(() => {
       combinedQuery('test')
-        .add(fooQuery, { foo: 'foo' })
-        .add(fooQuery2)
+        .add('fooQ', fooQuery, { foo: 'foo' })
+        .add('fooQ2', fooQuery2)
     }).to.throw('duplicate field definition foo for operations FooQuery and FooQuery2')
   })
 
-  it('validation - variable names must be unique', () => {
+  it('validation - $id_$variable} names must be unique', () => {
     const fooQuery = parse(`
       query FooQuery($foo: String!) {
         foo: getFoo(foo: $foo)
@@ -310,9 +310,9 @@ describe('combinedQuery', () => {
 
     expect(() => {
       combinedQuery('test')
-        .add(fooQuery, { foo: 'foo' })
-        .add(fooQuery2, { foo: 'foo2'})
-    }).to.throw('duplicate variable definition foo for operations FooQuery and FooQuery2')
+        .add('fooQ', fooQuery, { foo: 'foo' })
+        .add('fooQ', fooQuery2, { foo: 'foo2'})
+    }).to.throw('duplicate variable definition fooQ_foo for operations FooQuery and FooQuery2')
   })
 
   it('renaming works correctly if addN is used as the first operation', () => {
@@ -327,51 +327,51 @@ describe('combinedQuery', () => {
     }
 
     let { document, variables } = combinedQuery('FooMutationMultiple')
-      .addN<{ foo: String }>(fooMutation, [{foo: 'foo_0'}, {foo: "foo_1"}], undefined, renamingFunction)
+      .addN<{ foo: String }>('fooMutN', fooMutation, [{foo: 'foo_0'}, {foo: "foo_1"}], undefined, renamingFunction)
 
     let query =
-      `mutation FooMutationMultiple($foo_0: String!, $foo_1: String!) {
-          doFoo___0: doFoo(foo: $foo_0)
-          doFoo___1: doFoo(foo: $foo_1)
+      `mutation FooMutationMultiple($fooMutN_foo_0: String!, $fooMutN_foo_1: String!) {
+          doFoo___0: doFoo(foo: $fooMutN_foo_0)
+          doFoo___1: doFoo(foo: $fooMutN_foo_1)
       }`
 
     query = print(parse(query))
     expect(print(document)).to.equal(query)
     expect(variables).to.include({
-      foo_0: "foo_0",
-      foo_1: "foo_1"
+      fooMutN_foo_0: "foo_0",
+      fooMutN_foo_1: "foo_1"
     })
 
     ;({ document, variables } = combinedQuery('FooMutationMultiple')
-      .addN<{ foo: String }>(fooMutation, [{foo: 'foo_0'}, {foo: "foo_1"}], renamingFunction, undefined))
+      .addN<{ foo: String }>('fooMutN', fooMutation, [{foo: 'foo_0'}, {foo: "foo_1"}], renamingFunction, undefined))
 
     query =
-      `mutation FooMutationMultiple($foo___0: String!, $foo___1: String!) {
-          doFoo_0: doFoo(foo: $foo___0)
-          doFoo_1: doFoo(foo: $foo___1)
+      `mutation FooMutationMultiple($fooMutN_foo___0: String!, $fooMutN_foo___1: String!) {
+          doFoo_0: doFoo(foo: $fooMutN_foo___0)
+          doFoo_1: doFoo(foo: $fooMutN_foo___1)
       }`
 
     query = print(parse(query))
     expect(print(document)).to.equal(query)
     expect(variables).to.include({
-        foo___0: "foo_0",
-        foo___1: "foo_1"
+      fooMutN_foo___0: "foo_0",
+      fooMutN_foo___1: "foo_1"
     })
 
     ;({ document, variables } = combinedQuery('FooMutationMultiple')
-      .addN<{ foo: String }>(fooMutation, [{foo: 'foo_0'}, {foo: "foo_1"}], renamingFunction, renamingFunction))
+      .addN<{ foo: String }>('fooMutN', fooMutation, [{foo: 'foo_0'}, {foo: "foo_1"}], renamingFunction, renamingFunction))
 
     query =
-      `mutation FooMutationMultiple($foo___0: String!, $foo___1: String!) {
-          doFoo___0: doFoo(foo: $foo___0)
-          doFoo___1: doFoo(foo: $foo___1)
+      `mutation FooMutationMultiple($fooMutN_foo___0: String!, $fooMutN_foo___1: String!) {
+          doFoo___0: doFoo(foo: $fooMutN_foo___0)
+          doFoo___1: doFoo(foo: $fooMutN_foo___1)
       }`
 
     query = print(parse(query))
     expect(print(document)).to.equal(query)
     expect(variables).to.include({
-      foo___0: "foo_0",
-      foo___1: "foo_1"
+      fooMutN_foo___0: "foo_0",
+      fooMutN_foo___1: "foo_1"
     })
   })
 })

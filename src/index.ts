@@ -1,5 +1,11 @@
 import { DocumentNode, OperationDefinitionNode, DefinitionNode, FieldNode } from 'graphql'
-import { renameVariablesAndTopLevelFields, RenameFnWithIndex, defaultRenameFn, renameVariables } from './utils'
+import {
+  renameVariablesAndTopLevelFields,
+  RenameFnWithIndex,
+  defaultRenameFn,
+  renameVariables,
+  RenameFn
+} from './utils'
 
 type OperationVariables = Record<string, any>
 
@@ -10,32 +16,46 @@ const emptyDoc: DocumentNode = {
 
 export interface NewCombinedQueryBuilder {
   operationName: string,
-  add: <TData = any, TVariables = OperationVariables>(document: DocumentNode, variables?: TVariables) => CombinedQueryBuilder<TData, TVariables>
-  addN: <TVariables = OperationVariables>(document: DocumentNode, variables: TVariables[], variableRenameFn?: RenameFnWithIndex, fieldRenameFn?: RenameFnWithIndex ) => CombinedQueryBuilder<{}, {}>
+  add: <TData = any, TVariables extends OperationVariables = {}>(id: string, document: DocumentNode, variables?: TVariables) => CombinedQueryBuilder<TData>
+  addN: <TVariables extends OperationVariables = {}>(id: string, document: DocumentNode, variables: TVariables[], variableRenameFn?: RenameFnWithIndex, fieldRenameFn?: RenameFnWithIndex) => CombinedQueryBuilder<{}, {}>
 }
 
 export interface CombinedQueryBuilder<TData = any, TVariables extends OperationVariables = {}> {
   document: DocumentNode,
   variables?: TVariables,
-  add: <TDataAdd = any, TVariablesAdd = OperationVariables>(document: DocumentNode, variables?: TVariablesAdd) => CombinedQueryBuilder<TData & TDataAdd, TVariables & TVariablesAdd>
-  addN: <TVariablesAdd = OperationVariables>(document: DocumentNode, variables: TVariablesAdd[], variableRenameFn?: RenameFnWithIndex, fieldRenameFn?: RenameFnWithIndex) => CombinedQueryBuilder<TData, TVariables>
+  add: <TDataAdd = any, TVariablesAdd extends OperationVariables = {}>(id: string, document: DocumentNode, variables?: TVariablesAdd) => CombinedQueryBuilder<TData & TDataAdd, TVariables & TVariablesAdd>
+  addN: <TVariablesAdd extends OperationVariables = {}>(id: string, document: DocumentNode, variables: TVariablesAdd[], variableRenameFn?: RenameFnWithIndex, fieldRenameFn?: RenameFnWithIndex) => CombinedQueryBuilder<TData, TVariables>
 }
 
-class CombinedQueryError extends Error {}
+class CombinedQueryError extends Error {
+}
 
-class CombinedQueryBuilderImpl<TData = any, TVariables = OperationVariables> implements CombinedQueryBuilder<TData, TVariables> {
+const renameFn: (id: string) => RenameFn = (id: string) => (varName: string) => {
+  return `${id}_${varName}`
+}
 
+const prefixInput = (id: string, document: DocumentNode, variables?: OperationVariables): { document: DocumentNode, variables?: OperationVariables } => {
+  return {
+    document: renameVariablesAndTopLevelFields(document, renameFn(id), fieldName => fieldName),
+    variables: variables && renameVariables(variables, renameFn(id))
+  }
+}
+
+class CombinedQueryBuilderImpl<TData = any, TVariables extends OperationVariables = {}> implements CombinedQueryBuilder<TData> {
+  id: string
   document: DocumentNode
   variables?: TVariables
 
-  constructor(private operationName: string, document: DocumentNode, variables?: TVariables) {
+  constructor(private operationName: string, id: string, document: DocumentNode, variables?: TVariables) {
+    this.id = id
     this.document = document
     this.variables = variables
   }
 
-  add<TDataAdd = any, TVariablesAdd = OperationVariables>(document: DocumentNode, variables?: TVariablesAdd): CombinedQueryBuilder<TData & TDataAdd, TVariables & TVariablesAdd> {
+  add<TDataAdd = any, TVariablesAdd extends OperationVariables = {}>(id: string, document: DocumentNode, variables?: TVariablesAdd): CombinedQueryBuilder<TData & TDataAdd, TVariables & TVariablesAdd> {
+    const {document: updatedDocument, variables: updatedVariables} = prefixInput(id, document, variables)
 
-    const opDefs = this.document.definitions.concat(document.definitions).filter((def: DefinitionNode): def is OperationDefinitionNode => def.kind === 'OperationDefinition')
+    const opDefs = this.document.definitions.concat(updatedDocument.definitions).filter((def: DefinitionNode): def is OperationDefinitionNode => def.kind === 'OperationDefinition')
     if (!opDefs.length) {
       throw new CombinedQueryError('Expected at least one OperationDefinition, but found none.')
     }
@@ -72,19 +92,19 @@ class CombinedQueryBuilderImpl<TData = any, TVariables = OperationVariables> imp
     })
 
     const newVars: TVariables & TVariablesAdd = (() => {
-      if (this.variables && variables) {
+      if (this.variables && updatedVariables) {
         return {
           ...this.variables,
-          ...variables
+          ...updatedVariables
         } as TVariables & TVariablesAdd
       }
-      return (variables || this.variables) as TVariables & TVariablesAdd
+      return (updatedVariables || this.variables) as TVariables & TVariablesAdd
     })()
 
     let definitions: DefinitionNode[] = [{
       kind: 'OperationDefinition',
       directives: opDefs.flatMap(def => def.directives || []),
-      name: { kind: 'Name', value: this.operationName },
+      name: {kind: 'Name', value: this.operationName},
       operation: opDefs[0].operation,
       selectionSet: {
         kind: 'SelectionSet',
@@ -93,7 +113,7 @@ class CombinedQueryBuilderImpl<TData = any, TVariables = OperationVariables> imp
       variableDefinitions: opDefs.flatMap(def => def.variableDefinitions || [])
     }]
     const encounteredFragmentList = new Set<string>()
-    const combinedDocumentDefinitions = this.document.definitions.concat(document.definitions)
+    const combinedDocumentDefinitions = this.document.definitions.concat(updatedDocument.definitions)
     for (const definition of combinedDocumentDefinitions) {
       if (definition.kind === 'OperationDefinition') {
         continue
@@ -112,17 +132,18 @@ class CombinedQueryBuilderImpl<TData = any, TVariables = OperationVariables> imp
       definitions
     }
 
-    return new CombinedQueryBuilderImpl<TData & TDataAdd, TVariables & TVariablesAdd>(this.operationName, newDoc, newVars)
+    return new CombinedQueryBuilderImpl<TData & TDataAdd, TVariables & TVariablesAdd>(this.operationName, id, newDoc, newVars)
   }
 
-  addN<TVariablesAdd = OperationVariables>(document: DocumentNode, variables: TVariablesAdd[], variableRenameFn: RenameFnWithIndex = defaultRenameFn, fieldRenameFn: RenameFnWithIndex = defaultRenameFn): CombinedQueryBuilder<TData, TVariables> {
+  addN<TVariablesAdd extends OperationVariables = {}>(id: string, document: DocumentNode, variables: TVariablesAdd[], variableRenameFn: RenameFnWithIndex = defaultRenameFn, fieldRenameFn: RenameFnWithIndex = defaultRenameFn): CombinedQueryBuilder<TData, TVariables> {
     if (!variables.length) {
       return this
     }
-    return variables.reduce<CombinedQueryBuilder<unknown, TVariables & OperationVariables>>((builder, _variables, idx): CombinedQueryBuilder<unknown, TVariables & OperationVariables> => {
+    type Result = CombinedQueryBuilder<TData, TVariables & OperationVariables>
+    return variables.reduce<Result>((builder, _variables, idx): Result => {
       const doc = renameVariablesAndTopLevelFields(document, name => variableRenameFn(name, idx), name => fieldRenameFn(name, idx))
       const vars = renameVariables(_variables, name => variableRenameFn(name, idx))
-      return builder.add(doc, vars as any)
+      return builder.add(id, doc, vars)
     }, this)
   }
 }
@@ -130,11 +151,12 @@ class CombinedQueryBuilderImpl<TData = any, TVariables = OperationVariables> imp
 export default function combinedQuery(operationName: string): NewCombinedQueryBuilder {
   return {
     operationName,
-    add<TData = any, TVariables extends OperationVariables={}>(document: DocumentNode, variables?: TVariables ) {
-      return new CombinedQueryBuilderImpl<TData, TVariables>(this.operationName, document, variables)
+    add<TData = any, TVariables extends OperationVariables = {}>(id: string, document: DocumentNode, variables?: TVariables) {
+      const {document: prefixedDoc, variables: prefixVars} = prefixInput(id, document, variables)
+      return new CombinedQueryBuilderImpl<TData, TVariables>(this.operationName, id, prefixedDoc, prefixVars as TVariables)
     },
-    addN<TVariables = OperationVariables>(document: DocumentNode, variables: TVariables[], variableRenameFn?: RenameFnWithIndex, fieldRenameFn?: RenameFnWithIndex): CombinedQueryBuilder<{}, {}> {
-      return new CombinedQueryBuilderImpl<{}, {}>(this.operationName,  emptyDoc).addN<TVariables>(document, variables, variableRenameFn, fieldRenameFn)
+    addN<TVariables extends OperationVariables = {}>(id: string, document: DocumentNode, variables: TVariables[], variableRenameFn?: RenameFnWithIndex, fieldRenameFn?: RenameFnWithIndex): CombinedQueryBuilder<{}, {}> {
+      return new CombinedQueryBuilderImpl<{}, {}>(this.operationName, id, emptyDoc).addN<TVariables>(id, document, variables, variableRenameFn, fieldRenameFn)
     }
   }
 }

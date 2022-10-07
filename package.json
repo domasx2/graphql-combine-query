@@ -16,10 +16,10 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git://github.com/domasx2/graphql-combine-query.git"
+    "url": "git://github.com/ivykp/graphql-combine-query.git"
   },
   "bugs": {
-    "url": "https://github.com/domasx2/graphql-combine-query/issues"
+    "url": "https://github.com/ivykp/graphql-combine-query/issues"
   },
   "scripts": {
     "prepublish": "tsc",
@@ -34,7 +34,7 @@
     "mocha": "^8.1.3",
     "release-it": "^14.0.3",
     "ts-node": "^8.10.2",
-    "typescript": "^3.9.5"
+    "typescript": "^4.8.4"
   },
   "peerDependencies": {
     "graphql": "^15.1.0 || ^16.0.0"
